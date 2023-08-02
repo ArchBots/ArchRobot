@@ -30,7 +30,7 @@
 - <b> ᴠᴘs/ʟᴏᴄᴀʟ ᴅᴇᴘʟᴏʏᴍᴇɴᴛ ᴍᴇᴛʜᴏᴅ </b>
 </h3></summary>
 
-- Get your [Necessary Variables](https://github.com/ArchBots/ArchRobot/blob/main/ᴀʀᴄʜ ʀᴏʙᴏᴛ /config.py)
+- Get your [Necessary Variables](https://github.com/ArchBots/ArchRobot/blob/main/ArchRobot/config.py)
 - Upgrade and Update by :
 `sudo apt-get update && sudo apt-get upgrade -y`
 - Install required packages by :
