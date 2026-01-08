@@ -1,0 +1,13 @@
+name :  🇺🇸English
+
+START: "Hey there {0}!\nMy name is {1} — I’m here to help you manage your groups.\nUse /help to see what I can do.\n\nJoin my news channel to stay updated.\n\nCheck /privacy to learn how your data is handled."
+
+PRIVACY: "🔒 Privacy Policy\n\nArchRobot is designed to help group administrators manage and protect their communities.\n\n📌 Data Access\nI only access publicly available Telegram information such as user ID, username, name, bio, and profile photo. This happens only when a command is used (like /info) or when moderation checks are triggered.\n\n📌 Data Usage\nThis data is used strictly for moderation, security, and administrative purposes, including scam and spam detection. I do not read private messages.\n\n📌 Data Storage\nI do not permanently store personal user data unless required for moderation features. Temporary data used during processing is discarded.\n\n📌 Data Deletion\nYou can request deletion of your stored data at any time by using the /deletedata command.\n\n📌 Data Sharing\nI do not share user data with third parties.\n\nBy using this bot, you agree to Telegram’s own privacy policy."
+
+AGREE: "I agree to the privacy policy"
+
+INFO1: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**Last Name**: {2}\n**Username**: {3}\n**User Link**: {4}"
+
+INFO2: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**Username**: {2}\n**User Link**: {3}"
+
+INFO3: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**User Link**: {2}"
