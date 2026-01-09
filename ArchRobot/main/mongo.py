@@ -12,37 +12,47 @@
 #
 
 
-from motor.motor_asyncio import AsyncIOMotorClient as _mongo_client_
+from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 from pyrogram import Client
 
-import config
+from config.config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI
+from ArchRobot.logging import LOGGER
 
-from ..logging import LOGGER
 
 TEMP_MONGODB = "mongodb+srv://archpublic:v8KG2NlkAa70Fx3V@cluster0.whdnitw.mongodb.net/?appName=Cluster0"
 
+logger = LOGGER(__name__)
 
-if config.MONGO_DB_URI is None:
-    LOGGER(__name__).warning(
-        "No MONGO DB URL found.. Your Bot will work on Arch Database"
+
+def _get_username():
+    app = Client(
+        "ArchRobotTemp",
+        api_id=API_ID,
+        api_hash=API_HASH,
+        bot_token=BOT_TOKEN,
+        in_memory=True,
     )
-    temp_client = Client(
-        "ArchRobot",
-        bot_token=config.BOT_TOKEN,
-        api_id=config.API_ID,
-        api_hash=config.API_HASH,
-    )
-    temp_client.start()
-    info = temp_client.get_me()
-    username = info.username
-    temp_client.stop()
-    _mongo_async_ = _mongo_client_(TEMP_MONGODB)
-    _mongo_sync_ = MongoClient(TEMP_MONGODB)
-    mongodb = _mongo_async_[username]
-    pymongodb = _mongo_sync_[username]
+    app.start()
+    me = app.get_me()
+    app.stop()
+    return me.username
+
+
+if not MONGO_URI:
+    logger.warning("No MONGO_DB_URI found, using public Arch database")
+
+    username = _get_username()
+
+    _mongo_async = AsyncIOMotorClient(TEMP_MONGODB)
+    _mongo_sync = MongoClient(TEMP_MONGODB)
+
+    mongodb = _mongo_async[username]
+    pymongodb = _mongo_sync[username]
+
 else:
-    _mongo_async_ = _mongo_client_(config.MONGO_DB_URI)
-    _mongo_sync_ = MongoClient(config.MONGO_DB_URI)
-    mongodb = _mongo_async_.Arch
-    pymongodb = _mongo_sync_.Arch
+    _mongo_async = AsyncIOMotorClient(MONGO_URI)
+    _mongo_sync = MongoClient(MONGO_URI)
+
+    mongodb = _mongo_async.Arch
+    pymongodb = _mongo_sync.Arch
