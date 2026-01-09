@@ -1,8 +1,8 @@
 name :  English
 
-START: "Hey there {0}!\nMy name is {1} — I’m here to help you manage your groups.\nUse /help to see what I can do.\n\nJoin my news channel to stay updated.\n\nCheck /privacy to learn how your data is handled."
+START: "Hey there {0}!\nMy name is {1} â€” Iâ€™m here to help you manage your groups.\nUse /help to see what I can do.\n\nJoin my news channel to stay updated.\n\nCheck /privacy to learn how your data is handled."
 
-PRIVACY: " Privacy Policy\n\nArchRobot is designed to help group administrators manage and protect their communities.\n\n Data Access\nI only access publicly available Telegram information such as user ID, username, name, bio, and profile photo. This happens only when a command is used (like /info) or when moderation checks are triggered.\n\n Data Usage\nThis data is used strictly for moderation, security, and administrative purposes, including scam and spam detection. I do not read private messages.\n\n Data Storage\nI do not permanently store personal user data unless required for moderation features. Temporary data used during processing is discarded.\n\n Data Deletion\nYou can request deletion of your stored data at any time by using the /deletedata command.\n\n Data Sharing\nI do not share user data with third parties.\n\nBy using this bot, you agree to Telegram’s own privacy policy."
+PRIVACY: " Privacy Policy\n\nArchRobot is designed to help group administrators manage and protect their communities.\n\n Data Access\nI only access publicly available Telegram information such as user ID, username, name, bio, and profile photo. This happens only when a command is used (like /info) or when moderation checks are triggered.\n\n Data Usage\nThis data is used strictly for moderation, security, and administrative purposes, including scam and spam detection. I do not read private messages.\n\n Data Storage\nI do not permanently store personal user data unless required for moderation features. Temporary data used during processing is discarded.\n\n Data Deletion\nYou can request deletion of your stored data at any time by using the /deletedata command.\n\n Data Sharing\nI do not share user data with third parties.\n\nBy using this bot, you agree to Telegramâ€™s own privacy policy."
 
 AGREE: "I agree to the privacy policy"
 
@@ -11,3 +11,26 @@ INFO1: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**Last Name**: {2}\n**
 INFO2: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**Username**: {2}\n**User Link**: {3}"
 
 INFO3: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**User Link**: {2}"
+AHELP: "*Admin*\n\nManage admins in your group.\n\n*Commands:*\n- /promote <reply | @username | userid | mention>\n- /demote <reply | @username | userid | mention>"
+
+ABOT: "I'm not an admin here.\nHow do you expect me to promote people?"
+
+ABOTP: "I'm an admin, but I don't have permission to promote members.\nPlease enable *Promote Users* for me."
+
+AUSER: "You are not an admin."
+
+AUSERP: "You don't have permission to promote or demote users."
+
+ATARGET: "Reply to a user or provide a username, user ID, or mention."
+
+APOK: "User promoted successfully."
+
+ADOK: "User demoted successfully."
+
+AALREADY: "This user has already been promoted by someone other than me; I can't change their permissions!"
+
+APFAIL: "I can't promote this user."
+
+ADFAIL: "I can't demote this user."
+
+AERR: "Something went wrong. Please try again later."
