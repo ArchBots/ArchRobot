@@ -11,7 +11,8 @@ INFO1: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**Last Name**: {2}\n**
 INFO2: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**Username**: {2}\n**User Link**: {3}"
 
 INFO3: "**User Info**:\n**ID**: {0}\n**First Name**: {1}\n**User Link**: {2}"
-AHELP: "*Admin*\n\nManage admins in your group.\n\n*Commands:*\n- /promote <reply | @username | userid | mention>\n- /demote <reply | @username | userid | mention>"
+
+AHELP: "*Admin*\n\nMake it easy to promote and demote users with the admin module!\n\n*Admin commands:*\n- /promote <reply/username/mention/userid>: Promote a user.\n- /demote <reply/username/mention/userid>: Demote a user.\n- /adminlist: List the admins in the current chat.\n- /admincache: Update the admin cache to reflect new admins or permission changes.\n- /anonadmin <yes/no/on/off>: Allow anonymous admins to use all commands without permission checks. Not recommended.\n- /adminerror <yes/no/on/off>: Send error messages when normal users use admin commands. Default: on.\n\nSometimes, you promote or demote an admin manually and {0} doesn’t realise it immediately. To avoid spamming Telegram servers, admin status is cached locally.\n\nThis means you may need to wait a few minutes for admin rights to update. If you want to refresh them instantly, use /admincache — it will force {0} to recheck admin permissions."
 
 ABOT: "I'm not an admin here.\nHow do you expect me to promote people?"
 
