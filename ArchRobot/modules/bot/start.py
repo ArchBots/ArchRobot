@@ -25,7 +25,7 @@ def kb_start():
             ],
             [
                 InlineKeyboardButton(
-                    "💬 Support Group", url=f"https://t.me/{confix.SUPPORT_GROUP}"
+                    "💬 Support Group", url=f"https://t.me/{config.SUPPORT_GROUP}"
                 ),
                 InlineKeyboardButton(
                     "📢 Channel", url=f"https://t.me/{config.SUPPORT_CHANNEL}"
