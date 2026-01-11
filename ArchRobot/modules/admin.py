@@ -11,9 +11,22 @@
 # This software is provided "as is", without warranty of any kind,
 #
 
+#
+# Copyright (c) 2024–2026 ArchBots
+#
+# This file is part of the ArchRobot project.
+# Repository: https://github.com/ArchBots/ArchRobot
+#
+# Licensed under the MIT License.
+# You may obtain a copy of the License in the LICENSE file
+# distributed with this source code.
+#
+# This software is provided "as is", without warranty of any kind,
+#
+
 from pyrogram import filters
 from pyrogram.enums import ChatMemberStatus, MessageEntityType
-from pyrogram.types import ChatPrivileges
+from pyrogram.types import ChatAdministratorRights
 
 from ArchRobot import arch
 from strings import get_string
@@ -32,6 +45,16 @@ def _s(uid):
 async def _is_admin(c, cid, uid):
     m = await c.get_chat_member(cid, uid)
     return m.status in (ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER)
+
+
+def _delegate(bot):
+    return ChatAdministratorRights(
+        **{
+            k: v
+            for k, v in vars(bot).items()
+            if k not in ("can_promote_members", "is_anonymous")
+        }
+    )
 
 
 async def _target(c, m):
@@ -86,19 +109,7 @@ async def promote(c, m):
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            privileges=ChatPrivileges(
-                can_manage_chat=True,
-                can_change_info=True,
-                can_delete_messages=True,
-                can_manage_video_chats=True,
-                can_restrict_members=True,
-                can_invite_users=True,
-                can_pin_messages=True,
-                can_manage_topics=True,
-                can_manage_stories=True,
-                can_post_messages=True,
-                can_edit_messages=True,
-            ),
+            rights=_delegate(me.privileges),
         )
         await m.reply_text(s["APOK"])
     except Exception:
@@ -137,7 +148,7 @@ async def demote(c, m):
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            privileges=ChatPrivileges(),
+            rights=ChatAdministratorRights(),
         )
         await m.reply_text(s["ADOK"])
     except Exception:
