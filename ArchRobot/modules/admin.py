@@ -96,6 +96,8 @@ async def promote(c, m):
                 can_pin_messages=True,
                 can_manage_topics=True,
                 can_manage_stories=True,
+                can_post_messages=True,
+                can_edit_messages=True,
             ),
         )
         await m.reply_text(s["APOK"])
