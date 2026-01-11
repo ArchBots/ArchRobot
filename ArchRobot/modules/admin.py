@@ -1,3 +1,16 @@
+#
+# Copyright (c) 2024–2026 ArchBots
+#
+# This file is part of the ArchRobot project.
+# Repository: https://github.com/ArchBots/ArchRobot
+#
+# Licensed under the MIT License.
+# You may obtain a copy of the License in the LICENSE file
+# distributed with this source code.
+#
+# This software is provided "as is", without warranty of any kind,
+#
+
 from pyrogram import filters
 from pyrogram.enums import ChatMemberStatus
 from pyrogram.types import ChatPrivileges
@@ -121,26 +134,25 @@ async def adminlist(c, m):
 
 @arch.on_message(filters.command("admincache") & filters.group)
 async def admincache(_, m):
-    await m.reply_text("Admin cache refreshed.")
+    s = _s(m.from_user.id)
+    await m.reply_text(s["ACACHE"])
 
 
 @arch.on_message(filters.command("anonadmin") & filters.group)
 async def anonadmin(_, m):
+    s = _s(m.from_user.id)
     if len(m.command) < 2:
         return
     v = m.command[1].lower() in ("on", "yes", "true")
     set_anon(m.chat.id, v)
-    await m.reply_text(
-        "Anon admin enabled." if v else "Anon admin disabled."
-    )
+    await m.reply_text(s["AANON_ON"] if v else s["AANON_OFF"])
 
 
 @arch.on_message(filters.command("adminerror") & filters.group)
 async def adminerror(_, m):
+    s = _s(m.from_user.id)
     if len(m.command) < 2:
         return
     v = m.command[1].lower() in ("on", "yes", "true")
     set_err(m.chat.id, v)
-    await m.reply_text(
-        "Admin errors enabled." if v else "Admin errors disabled."
-    )
+    await m.reply_text(s["AERR_ON"] if v else s["AERR_OFF"])

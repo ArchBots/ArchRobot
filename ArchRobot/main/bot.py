@@ -11,26 +11,29 @@
 # This software is provided "as is", without warranty of any kind,
 #
 
-
 import sys
 from pyrogram import Client
+from pyrogram.enums import ChatMemberStatus
 from pyrogram.types import BotCommand
+
 import config
-from ..logging import LOGGER
+from ArchRobot.logger import LOGGER
 
 
 class ArchRoBot(Client):
     def __init__(self):
-        LOGGER(__name__).info("Starting Bot")
+        self.log = LOGGER(__name__)
+        self.log.info("Initializing ArchRoBot")
+
         super().__init__(
-            "ArchRobot",
+            name="ArchRobot",
             api_id=config.API_ID,
             api_hash=config.API_HASH,
             bot_token=config.BOT_TOKEN,
         )
 
-    async def start(self):
-        await super().start()
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
 
         me = await self.get_me()
         self.id = me.id
@@ -42,26 +45,40 @@ class ArchRoBot(Client):
         )
 
         try:
-            await self.send_message(config.LOG_GROUP_ID, "Bot Started")
-        except Exception:
-            LOGGER(__name__).error(
-                "Bot cannot access log group. Add and promote it as admin."
+            await self.send_message(
+                config.LOG_GROUP_ID,
+                f"{self.name} started"
             )
-            sys.exit()
+        except Exception:
+            self.log.error("Bot cannot access log group")
+            sys.exit(1)
 
-        if str(config.SET_CMDS) == "True":
+        try:
+            member = await self.get_chat_member(
+                config.LOG_GROUP_ID,
+                self.id
+            )
+            if member.status not in (
+                ChatMemberStatus.ADMINISTRATOR,
+                ChatMemberStatus.OWNER,
+            ):
+                raise PermissionError
+        except Exception:
+            self.log.error("Bot must be admin in log group")
+            sys.exit(1)
+
+        if str(config.SET_CMDS).lower() == "true":
             try:
                 await self.set_bot_commands(
-                    [BotCommand("ping", "Check bot status")]
+                    [
+                        BotCommand("start", "Start the bot"),
+                        BotCommand("ping", "Check bot status"),
+                    ]
                 )
             except Exception:
                 pass
 
-        m = await self.get_chat_member(config.LOG_GROUP_ID, self.id)
-        if m.status != "administrator":
-            LOGGER(__name__).error(
-                "Bot must be admin in log group"
-            )
-            sys.exit()
+        self.log.info(f"ArchRoBot started as {self.name}")
 
-        LOGGER(__name__).info(f"ArchRobot Started as {self.name}")
+    async def stop(self, *args, **kwargs):
+        await super().stop(*args, **kwargs)

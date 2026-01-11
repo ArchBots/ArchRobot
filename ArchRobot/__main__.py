@@ -1,18 +1,23 @@
-from pyrogram import Client, filters
+#
+# Copyright (c) 2024–2026 ArchBots
+#
+# This file is part of the ArchRobot project.
+# Repository: https://github.com/ArchBots/ArchRobot
+#
+# Licensed under the MIT License.
+# You may obtain a copy of the License in the LICENSE file
+# distributed with this source code.
+#
+# This software is provided "as is", without warranty of any kind,
+#
+
+from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from config.config import API_ID, API_HASH, BOT_TOKEN
+from ArchRobot import arch
 from strings import get_string
 from ArchRobot.db.users import lang
 from ArchRobot.modules import ALL_MODULES
-
-
-app = Client(
-    "ArchRobot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-)
 
 
 HELPABLE = {}
@@ -40,7 +45,7 @@ def kb_help():
     return InlineKeyboardMarkup(rows)
 
 
-@app.on_message(filters.command("help") & filters.private)
+@arch.on_message(filters.command("help") & filters.private)
 async def help_cmd(_, m):
     s = _s(m.from_user.id)
     await m.reply_text(
@@ -49,7 +54,7 @@ async def help_cmd(_, m):
     )
 
 
-@app.on_callback_query(filters.regex("^help_"))
+@arch.on_callback_query(filters.regex("^help_"))
 async def help_cb(_, q):
     name = q.data.split("_", 1)[1]
     s = _s(q.from_user.id)
@@ -70,7 +75,7 @@ async def help_cb(_, q):
     )
 
 
-@app.on_callback_query(filters.regex("^help_back$"))
+@arch.on_callback_query(filters.regex("^help_back$"))
 async def help_back(_, q):
     s = _s(q.from_user.id)
     await q.message.edit_text(
@@ -79,10 +84,10 @@ async def help_back(_, q):
     )
 
 
-@app.on_callback_query(filters.regex("^close$"))
+@arch.on_callback_query(filters.regex("^close$"))
 async def close(_, q):
     await q.message.delete()
 
 
 if __name__ == "__main__":
-    app.run()
+    arch.run()
