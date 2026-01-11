@@ -36,22 +36,40 @@ def _s(uid):
     return get_string(lang(uid) or "en")
 
 
-async def _is_admin(c, cid, uid):
-    m = await c.get_chat_member(cid, uid)
-    return m.status in (ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER)
+async def _target(c, m):
+    if m.reply_to_message:
+        return m.reply_to_message.from_user
+    if m.entities:
+        for e in m.entities:
+            if e.type == MessageEntityType.TEXT_MENTION and e.user:
+                return e.user
+    if len(m.command) < 2:
+        return None
+    try:
+        return await c.get_users(m.command[1])
+    except Exception:
+        return None
 
 
-def _delegate(bot):
+def _mix(bot, user):
     return ChatAdministratorRights(
-        **{
-            k: v
-            for k, v in vars(bot).items()
-            if k not in ("can_promote_members", "is_anonymous")
-        }
+        can_manage_chat=bot.can_manage_chat and user.can_manage_chat,
+        can_change_info=bot.can_change_info and user.can_change_info,
+        can_delete_messages=bot.can_delete_messages and user.can_delete_messages,
+        can_manage_video_chats=bot.can_manage_video_chats and user.can_manage_video_chats,
+        can_restrict_members=bot.can_restrict_members and user.can_restrict_members,
+        can_invite_users=bot.can_invite_users and user.can_invite_users,
+        can_pin_messages=bot.can_pin_messages and user.can_pin_messages,
+        can_manage_topics=bot.can_manage_topics and user.can_manage_topics,
+        can_post_messages=bot.can_post_messages and user.can_post_messages,
+        can_edit_messages=bot.can_edit_messages and user.can_edit_messages,
+        can_post_stories=bot.can_post_stories and user.can_post_stories,
+        can_edit_stories=bot.can_edit_stories and user.can_edit_stories,
+        can_delete_stories=bot.can_delete_stories and user.can_delete_stories,
     )
 
 
-def _demote_all():
+def _demote():
     return ChatAdministratorRights(
         can_manage_chat=False,
         can_change_info=False,
@@ -69,36 +87,19 @@ def _demote_all():
     )
 
 
-async def _target(c, m):
-    if m.reply_to_message:
-        return m.reply_to_message.from_user
-    if m.entities:
-        for e in m.entities:
-            if e.type == MessageEntityType.TEXT_MENTION and e.user:
-                return e.user
-    if len(m.command) < 2:
-        return None
-    try:
-        return await c.get_users(m.command[1])
-    except Exception:
-        return None
-
-
 @arch.on_message(filters.command("promote") & filters.group)
 async def promote(c, m):
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
 
-    if not await _is_admin(c, m.chat.id, arch.me.id):
-        return await m.reply_text(s["ABOT"])
-
-    me = await c.get_chat_member(m.chat.id, arch.me.id)
-    if not me.privileges or not me.privileges.can_promote_members:
+    bot = await c.get_chat_member(m.chat.id, arch.me.id)
+    if not bot.privileges or not bot.privileges.can_promote_members:
         return await m.reply_text(s["ABOTP"])
 
-    if not anon(m.chat.id) and not await _is_admin(c, m.chat.id, m.from_user.id):
+    provider = await c.get_chat_member(m.chat.id, m.from_user.id)
+    if not provider.privileges or not provider.privileges.can_promote_members:
         if err(m.chat.id):
-            await m.reply_text(s["AUSER"])
+            await m.reply_text(s["AUSERP"])
         return
 
     u = await _target(c, m)
@@ -106,18 +107,16 @@ async def promote(c, m):
         return await m.reply_text(s["ATARGET"])
 
     await update_user(u.id, u.username)
+    target = await c.get_chat_member(m.chat.id, u.id)
 
-    cm = await c.get_chat_member(m.chat.id, u.id)
-    if cm.status == ChatMemberStatus.ADMINISTRATOR:
-        if cm.promoted_by and cm.promoted_by.id != arch.me.id:
-            return await m.reply_text(s["AALREADY"])
-        return await m.reply_text(s["APOK"])
+    if target.status == ChatMemberStatus.OWNER:
+        return await m.reply_text(s["AOWNER"])
 
     try:
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            privileges=_delegate(me.privileges),
+            privileges=_mix(bot.privileges, provider.privileges),
         )
         await m.reply_text(s["APOK"])
     except Exception:
@@ -129,14 +128,12 @@ async def demote(c, m):
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
 
-    if not await _is_admin(c, m.chat.id, arch.me.id):
-        return await m.reply_text(s["ABOT"])
-
-    me = await c.get_chat_member(m.chat.id, arch.me.id)
-    if not me.privileges or not me.privileges.can_promote_members:
+    bot = await c.get_chat_member(m.chat.id, arch.me.id)
+    if not bot.privileges or not bot.privileges.can_promote_members:
         return await m.reply_text(s["ABOTP"])
 
-    if not anon(m.chat.id) and not await _is_admin(c, m.chat.id, m.from_user.id):
+    provider = await c.get_chat_member(m.chat.id, m.from_user.id)
+    if not provider.privileges or not provider.privileges.can_promote_members:
         if err(m.chat.id):
             await m.reply_text(s["AUSERP"])
         return
@@ -146,16 +143,16 @@ async def demote(c, m):
         return await m.reply_text(s["ATARGET"])
 
     await update_user(u.id, u.username)
+    target = await c.get_chat_member(m.chat.id, u.id)
 
-    cm = await c.get_chat_member(m.chat.id, u.id)
-    if cm.status != ChatMemberStatus.ADMINISTRATOR:
+    if target.status != ChatMemberStatus.ADMINISTRATOR:
         return await m.reply_text(s["ADFAIL"])
 
     try:
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            privileges=_demote_all(),
+            privileges=_demote(),
         )
         await m.reply_text(s["ADOK"])
     except Exception:
@@ -169,12 +166,6 @@ async def adminlist(c, m):
     async for x in c.get_chat_members(m.chat.id, filter="administrators"):
         out.append(x.user.mention)
     await m.reply_text("\n".join(out) or s["ALIST_EMPTY"])
-
-
-@arch.on_message(filters.command("admincache") & filters.group)
-async def admincache(_, m):
-    s = _s(m.from_user.id)
-    await m.reply_text(s["ACACHE"])
 
 
 @arch.on_message(filters.command("anonadmin") & filters.group)
