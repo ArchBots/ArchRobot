@@ -34,7 +34,10 @@ if not eng_file.exists():
 with eng_file.open(encoding="utf8") as f:
     languages["eng"] = yaml.safe_load(f)
 
+languages["en"] = languages["eng"]
+
 languages_present["eng"] = languages["eng"].get("name", "English")
+languages_present["en"] = languages_present["eng"]
 
 
 for file in LANGS_DIR.iterdir():

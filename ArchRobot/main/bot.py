@@ -18,6 +18,7 @@ from pyrogram.types import BotCommand
 
 import config
 from ArchRobot.logger import LOGGER
+from ArchRobot.db import federations
 
 
 class ArchRoBot(Client):
@@ -34,6 +35,13 @@ class ArchRoBot(Client):
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
+
+        self.log.info("Initializing MongoDB indexes")
+        try:
+            await federations.create_indexes()
+        except Exception as e:
+            self.log.error(f"Failed to create MongoDB indexes: {e}")
+            sys.exit(1)
 
         me = await self.get_me()
         self.id = me.id
@@ -73,6 +81,14 @@ class ArchRoBot(Client):
                     [
                         BotCommand("start", "Start the bot"),
                         BotCommand("ping", "Check bot status"),
+                        BotCommand("help", "Get help"),
+                        BotCommand("newfed", "Create a federation"),
+                        BotCommand("myfeds", "List your federations"),
+                        BotCommand("chatfed", "Show chat federation"),
+                        BotCommand("joinfed", "Join a federation"),
+                        BotCommand("leavefed", "Leave federation"),
+                        BotCommand("fban", "Federation ban user"),
+                        BotCommand("funban", "Federation unban user"),
                     ]
                 )
             except Exception:

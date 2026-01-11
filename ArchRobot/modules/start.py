@@ -5,7 +5,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from ArchRobot import arch
 from strings import get_string, languages_present
-from ArchRobot.db.users import lang, set_lang, agreed, set_agreed
+from ArchRobot.db.users import lang, set_lang, agreed, set_agreed, update_user
 import config
 
 def kb_priv(l):
@@ -54,8 +54,11 @@ def kb_lang():
 @arch.on_message(filters.command("start") & filters.private)
 async def start(_, m):
     uid = m.from_user.id
+    username = m.from_user.username
     l = lang(uid) or "en"
     s = get_string(l)
+
+    await update_user(uid, username, l)
 
     if not agreed(uid):
         await m.reply_text(

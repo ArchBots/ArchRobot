@@ -17,7 +17,7 @@ from pyrogram.types import ChatPrivileges
 
 from ArchRobot import arch
 from strings import get_string
-from ArchRobot.db.users import lang
+from ArchRobot.db.users import lang, update_user
 from ArchRobot.db.settings import anon, err, set_anon, set_err
 
 
@@ -49,6 +49,8 @@ async def _target(c, m):
 async def promote(c, m):
     s = _s(m.from_user.id)
 
+    await update_user(m.from_user.id, m.from_user.username)
+
     if not await _is_admin(c, m.chat.id, arch.me.id):
         return await m.reply_text(s["ABOT"])
 
@@ -64,6 +66,8 @@ async def promote(c, m):
     u = await _target(c, m)
     if not u:
         return await m.reply_text(s["ATARGET"])
+
+    await update_user(u.id, u.username)
 
     cm = await c.get_chat_member(m.chat.id, u.id)
     if cm.status == ChatMemberStatus.ADMINISTRATOR:
@@ -93,6 +97,8 @@ async def promote(c, m):
 async def demote(c, m):
     s = _s(m.from_user.id)
 
+    await update_user(m.from_user.id, m.from_user.username)
+
     if not await _is_admin(c, m.chat.id, arch.me.id):
         return await m.reply_text(s["ABOT"])
 
@@ -108,6 +114,8 @@ async def demote(c, m):
     u = await _target(c, m)
     if not u:
         return await m.reply_text(s["ATARGET"])
+
+    await update_user(u.id, u.username)
 
     cm = await c.get_chat_member(m.chat.id, u.id)
     if cm.status != ChatMemberStatus.ADMINISTRATOR:
@@ -126,10 +134,11 @@ async def demote(c, m):
 
 @arch.on_message(filters.command("adminlist") & filters.group)
 async def adminlist(c, m):
+    s = _s(m.from_user.id)
     out = []
     async for x in c.get_chat_members(m.chat.id, filter="administrators"):
         out.append(x.user.mention)
-    await m.reply_text("\n".join(out) or "—")
+    await m.reply_text("\n".join(out) or s["ALIST_EMPTY"])
 
 
 @arch.on_message(filters.command("admincache") & filters.group)
