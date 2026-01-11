@@ -44,3 +44,6 @@ OWNER_ID: int = _env_int("OWNER_ID", required=True)
 SUPPORT_CHANNEL: Optional[str] = _normalize(_env("SUPPORT_CHANNEL"))
 SUPPORT_GROUP: Optional[str] = _normalize(_env("SUPPORT_GROUP"))
 LOG_GROUP: Optional[int] = _env_int("LOG_GROUP")
+LOG_GROUP_ID: Optional[int] = LOG_GROUP # Alias for backward compatibility - both names reference the same value
+
+SET_CMDS: str = _env("SET_CMDS", "True")

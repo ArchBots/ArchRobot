@@ -1,14 +1,14 @@
-
-import os
 import sys
+from pathlib import Path
 from typing import List
 
 import yaml
 
+BASE_DIR = Path(__file__).resolve().parent
+LANGS_DIR = BASE_DIR / "langs"
+
 languages = {}
 commands = {}
-
-
 languages_present = {}
 
 
@@ -20,36 +20,40 @@ def get_string(lang: str):
     return languages[lang]
 
 
-for filename in os.listdir(r"./strings"):
-    if filename.endswith(".yml"):
-        language_name = filename[:-4]
-        commands[language_name] = yaml.safe_load(
-            open(r"./strings/" + filename, encoding="utf8")
-        )
+for file in BASE_DIR.iterdir():
+    if file.suffix == ".yml":
+        with file.open(encoding="utf8") as f:
+            commands[file.stem] = yaml.safe_load(f)
 
 
-for filename in os.listdir(r"./strings/langs/"):
-    if "en" not in languages:
-        languages["en"] = yaml.safe_load(
-            open(r"./strings/langs/en.yml", encoding="utf8")
-        )
-        languages_present["en"] = languages["en"]["name"]
-    if filename.endswith(".yml"):
-        language_name = filename[:-4]
-        if language_name == "en":
-            continue
-        languages[language_name] = yaml.safe_load(
-            open(r"./strings/langs/" + filename, encoding="utf8")
-        )
-        for item in languages["en"]:
-            if item not in languages[language_name]:
-                languages[language_name][item] = languages["en"][item]
+eng_file = LANGS_DIR / "eng.yml"
+if not eng_file.exists():
+    print("ERROR: Base language file eng.yml is missing")
+    sys.exit(1)
+
+with eng_file.open(encoding="utf8") as f:
+    languages["eng"] = yaml.safe_load(f)
+
+languages_present["eng"] = languages["eng"].get("name", "English")
+
+
+for file in LANGS_DIR.iterdir():
+    if file.suffix != ".yml" or file.name == "eng.yml":
+        continue
+
+    lang = file.stem
+
+    with file.open(encoding="utf8") as f:
+        languages[lang] = yaml.safe_load(f)
+
+    for key, value in languages["eng"].items():
+        languages[lang].setdefault(key, value)
+
     try:
-        languages_present[language_name] = languages[language_name][
-            "name"
-        ]
-    except:
+        languages_present[lang] = languages[lang]["name"]
+    except KeyError:
         print(
-            "There is some issue with the language file inside bot. Please report it to the Arch Association at @ArchAssociation on Telegram"
+            "Language file error detected. "
+            "Please report it to @ArchAssociation on Telegram"
         )
-        sys.exit()
+        sys.exit(1)
