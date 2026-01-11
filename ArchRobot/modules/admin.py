@@ -12,7 +12,7 @@
 #
 
 from pyrogram import filters
-from pyrogram.enums import ChatMemberStatus
+from pyrogram.enums import ChatMemberStatus, MessageEntityType
 from pyrogram.types import ChatPrivileges
 
 from ArchRobot import arch
@@ -37,8 +37,15 @@ async def _is_admin(c, cid, uid):
 async def _target(c, m):
     if m.reply_to_message:
         return m.reply_to_message.from_user
+
+    if m.entities:
+        for e in m.entities:
+            if e.type == MessageEntityType.TEXT_MENTION and e.user:
+                return e.user
+
     if len(m.command) < 2:
         return None
+
     try:
         return await c.get_users(m.command[1])
     except Exception:
@@ -81,11 +88,14 @@ async def promote(c, m):
             u.id,
             privileges=ChatPrivileges(
                 can_manage_chat=True,
+                can_change_info=True,
                 can_delete_messages=True,
                 can_manage_video_chats=True,
                 can_restrict_members=True,
                 can_invite_users=True,
                 can_pin_messages=True,
+                can_manage_topics=True,
+                can_manage_stories=True,
             ),
         )
         await m.reply_text(s["APOK"])
