@@ -1,6 +1,6 @@
-pymongo[srv]>=4.1
+pymongo
 kurigram
 tgcrypto
 pyyaml
 python-dotenv
-motor>=3.3.0
+motor

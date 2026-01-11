@@ -9,6 +9,15 @@
 # This software is provided "as is", without warranty of any kind,
 #
 
+#
+# Copyright (c) 2024–2026 ArchBots
+#
+# This file is part of the ArchRobot project.
+# Repository: https://github.com/ArchBots/ArchRobot
+#
+# Licensed under the MIT License.
+#
+
 from pyrogram import filters
 from pyrogram.enums import ChatMemberStatus, MessageEntityType
 from pyrogram.types import ChatAdministratorRights
@@ -42,18 +51,33 @@ def _delegate(bot):
     )
 
 
+def _demote_all():
+    return ChatAdministratorRights(
+        can_manage_chat=False,
+        can_change_info=False,
+        can_delete_messages=False,
+        can_manage_video_chats=False,
+        can_restrict_members=False,
+        can_invite_users=False,
+        can_pin_messages=False,
+        can_manage_topics=False,
+        can_post_messages=False,
+        can_edit_messages=False,
+        can_post_stories=False,
+        can_edit_stories=False,
+        can_delete_stories=False,
+    )
+
+
 async def _target(c, m):
     if m.reply_to_message:
         return m.reply_to_message.from_user
-
     if m.entities:
         for e in m.entities:
             if e.type == MessageEntityType.TEXT_MENTION and e.user:
                 return e.user
-
     if len(m.command) < 2:
         return None
-
     try:
         return await c.get_users(m.command[1])
     except Exception:
@@ -63,7 +87,6 @@ async def _target(c, m):
 @arch.on_message(filters.command("promote") & filters.group)
 async def promote(c, m):
     s = _s(m.from_user.id)
-
     await update_user(m.from_user.id, m.from_user.username)
 
     if not await _is_admin(c, m.chat.id, arch.me.id):
@@ -94,7 +117,7 @@ async def promote(c, m):
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            rights=_delegate(me.privileges),
+            privileges=_delegate(me.privileges),
         )
         await m.reply_text(s["APOK"])
     except Exception:
@@ -104,7 +127,6 @@ async def promote(c, m):
 @arch.on_message(filters.command("demote") & filters.group)
 async def demote(c, m):
     s = _s(m.from_user.id)
-
     await update_user(m.from_user.id, m.from_user.username)
 
     if not await _is_admin(c, m.chat.id, arch.me.id):
@@ -133,7 +155,7 @@ async def demote(c, m):
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            rights=ChatAdministratorRights(),
+            privileges=_demote_all(),
         )
         await m.reply_text(s["ADOK"])
     except Exception:
