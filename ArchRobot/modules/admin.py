@@ -1,19 +1,4 @@
 #
-# Copyright (c) 2024–2026 ArchBots
-#
-# This file is part of the ArchRobot project.
-# Repository: https://github.com/ArchBots/ArchRobot
-#
-# Licensed under the MIT License.
-# You may obtain a copy of the License in the LICENSE file
-# distributed with this source code.
-#
-# This software is provided "as is", without warranty of any kind,
-#
-
-#
-# Copyright (c) 2024–2026 ArchBots
-#
 # This file is part of the ArchRobot project.
 # Repository: https://github.com/ArchBots/ArchRobot
 #
