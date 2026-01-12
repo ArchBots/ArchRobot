@@ -26,10 +26,6 @@ from ArchRobot import arch
 from strings import get_string
 from ArchRobot.db.users import lang, update_user
 from ArchRobot.db.settings import err, set_anon, set_err
-from ArchRobot.db.mongo import adb
-
-
-col = adb.admin_promotions
 
 
 __mod_name__ = "Admin"
@@ -38,26 +34,6 @@ __help__ = "AHELP"
 
 def _s(uid):
     return get_string(lang(uid) or "en")
-
-
-async def _set_promoter(chat_id, user_id, promoter_id):
-    await col.update_one(
-        {"chat_id": chat_id, "user_id": user_id},
-        {"$set": {"promoter_id": promoter_id}},
-        upsert=True,
-    )
-
-
-async def _get_promoter(chat_id, user_id):
-    x = await col.find_one(
-        {"chat_id": chat_id, "user_id": user_id},
-        {"_id": 0, "promoter_id": 1},
-    )
-    return x["promoter_id"] if x else None
-
-
-async def _clear_promoter(chat_id, user_id):
-    await col.delete_one({"chat_id": chat_id, "user_id": user_id})
 
 
 async def _target(c, m):
@@ -140,6 +116,9 @@ async def promote(c, m):
 
     if target.status == ChatMemberStatus.OWNER:
         return await m.reply_text(s["AOWNER"])
+    
+    if target.status == ChatMemberStatus.ADMINISTRATOR:
+        return await m.reply_text(s["AALREADY"])
 
     title = " ".join(m.command[2:]) if len(m.command) > 2 else None
 
@@ -152,7 +131,6 @@ async def promote(c, m):
         if title:
             await c.set_administrator_title(m.chat.id, u.id, title)
 
-        await _set_promoter(m.chat.id, u.id, m.from_user.id)
         await m.reply_text(s["APOK"])
     except Exception:
         await m.reply_text(s["APFAIL"])
@@ -181,25 +159,12 @@ async def demote(c, m):
     if target.status != ChatMemberStatus.ADMINISTRATOR:
         return await m.reply_text(s["ADFAIL"])
 
-    promoter = await _get_promoter(m.chat.id, u.id)
-
-    if not promoter:
-        if err(m.chat.id):
-            await m.reply_text(s["ANOTPROMOTED"])
-        return
-
-    if promoter != m.from_user.id:
-        if err(m.chat.id):
-            await m.reply_text(s["ANOTYOURADMIN"])
-        return
-
     try:
         await c.promote_chat_member(
             m.chat.id,
             u.id,
             privileges=_demote(),
         )
-        await _clear_promoter(m.chat.id, u.id)
         await m.reply_text(s["ADOK"])
     except Exception:
         await m.reply_text(s["ADFAIL"])

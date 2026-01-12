@@ -27,3 +27,11 @@ def set_anon(cid: int, v: bool):
 
 def set_err(cid: int, v: bool):
     set(cid, "adminerror", v)
+
+
+def antibot_mode(cid: int) -> str:
+    return get(cid, "antibot", "links")
+
+
+def set_antibot_mode(cid: int, mode: str):
+    set(cid, "antibot", mode)

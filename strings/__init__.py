@@ -17,7 +17,25 @@ def get_command(value: str) -> List:
 
 
 def get_string(lang: str):
-    return languages[lang]
+    if lang not in languages:
+        lang = "en"
+    
+    class SafeDict(dict):
+        def __getitem__(self, key):
+            if key in self:
+                return dict.__getitem__(self, key)
+            if key in languages.get("en", {}):
+                return languages["en"][key]
+            return f"[{key}]"
+        
+        def get(self, key, default=None):
+            if key in self:
+                return dict.__getitem__(self, key)
+            if key in languages.get("en", {}):
+                return languages["en"][key]
+            return default if default is not None else f"[{key}]"
+    
+    return SafeDict(languages[lang])
 
 
 for file in BASE_DIR.iterdir():

@@ -5,8 +5,12 @@ from pyrogram.enums import MessageEntityType
 from ArchRobot import arch
 from strings import get_string
 from ArchRobot.db.users import lang, update_user
-from ArchRobot.db import filters as db_filt
-from ArchRobot.utils.perms import check_permission, is_bot_admin, PermissionLevel
+from ArchRobot.db.filt import (
+    create_filter, delete_filter, delete_all_filters,
+    get_chat_filters, find_or_create_reply, get_reply,
+    find_matching_filter
+)
+from ArchRobot.utils.params import check_permission, is_bot_admin, PermissionLevel
 from ArchRobot.utils.filt import parse_trigger, expand_fillings, has_filling, expand_command_filling
 
 
@@ -81,8 +85,8 @@ async def filter_cmd(c, m: Message):
     for traw, tnorm, flgs in trigs:
         rtype, fid, fuid, cont = _get_media(reply_msg) if reply_msg else ("text", None, None, reply_txt or "")
         
-        rid = await db_filt.find_or_create_reply(rtype, cont, fid, fuid)
-        if await db_filt.create_filter(m.chat.id, traw, tnorm, flgs, rid, m.from_user.id):
+        rid = await find_or_create_reply(rtype, cont, fid, fuid)
+        if await create_filter(m.chat.id, traw, tnorm, flgs, rid, m.from_user.id):
             cnt += 1
     
     if cnt > 0:
@@ -112,7 +116,7 @@ async def stop_cmd(c, m: Message):
     if not trigs:
         return await m.reply_text(s.get("FINV", "Invalid trigger."))
     
-    cnt = sum(1 for _, tnorm, _ in trigs if await db_filt.delete_filter(m.chat.id, tnorm))
+    cnt = sum(1 for _, tnorm, _ in trigs if await delete_filter(m.chat.id, tnorm))
     
     if cnt > 0:
         msg = s.get("FREM", "Filter removed: {0}").format(trigs[0][0]) if cnt == 1 else s.get("FREMM", "Removed {0} filters.").format(cnt)
@@ -132,7 +136,7 @@ async def stopall_cmd(c, m: Message):
     if not await check_permission(c, m.chat.id, m.from_user.id, PermissionLevel.OWNER):
         return await m.reply_text(s.get("FOWN", "Owner only."))
     
-    cnt = await db_filt.delete_all_filters(m.chat.id)
+    cnt = await delete_all_filters(m.chat.id)
     
     if cnt > 0:
         await m.reply_text(s.get("FREMA", "Removed {0} filters.").format(cnt))
@@ -145,7 +149,7 @@ async def filters_cmd(c, m: Message):
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
     
-    flist = await db_filt.get_chat_filters(m.chat.id)
+    flist = await get_chat_filters(m.chat.id)
     
     if not flist:
         return await m.reply_text(s.get("FNONE", "No filters."))
@@ -170,11 +174,11 @@ async def filter_handler(c, m: Message):
     if _is_cmd(m) or not m.text:
         return
 
-    filt = await db_filt.find_matching_filter(m.chat.id, m.text)
+    filt = await find_matching_filter(m.chat.id, m.text)
     if not filt:
         return
 
-    rdata = await db_filt.get_reply(filt["reply_id"])
+    rdata = await get_reply(filt["reply_id"])
     if not rdata:
         return
 
