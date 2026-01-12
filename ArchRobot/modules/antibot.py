@@ -12,7 +12,7 @@
 #
 
 from pyrogram import filters
-from pyrogram.enums import MessageEntityType
+from pyrogram.enums import MessageEntityType, ChatMemberStatus
 from pyrogram.types import Message
 
 from ArchRobot import arch
@@ -20,22 +20,20 @@ from strings import get_string
 from ArchRobot.db.users import lang, update_user
 from ArchRobot.db.settings import antibot_mode, set_antibot_mode
 
-
 __mod_name__ = "Antibot"
 __help__ = "ANTIBOTHELP"
-
 
 _cache = {}
 
 
-def _s(uid):
+def _s(uid: int):
     return get_string(lang(uid) or "en")
 
 
 def _get_mode(cid: int) -> str:
     if cid in _cache:
         return _cache[cid]
-    mode = antibot_mode(cid)
+    mode = antibot_mode(cid) or "off"
     _cache[cid] = mode
     return mode
 
@@ -48,21 +46,27 @@ def _set_mode(cid: int, mode: str):
 def _has_link_entity(m: Message) -> bool:
     if not m.entities:
         return False
-    for e in m.entities:
-        if e.type in (MessageEntityType.URL, MessageEntityType.TEXT_LINK):
-            return True
-    return False
+    return any(
+        e.type in (MessageEntityType.URL, MessageEntityType.TEXT_LINK)
+        for e in m.entities
+    )
 
 
 def _has_invite_link(m: Message) -> bool:
-    if not m.text and not m.caption:
-        return False
     text = (m.text or m.caption or "").lower()
-    return any(x in text for x in ["t.me/", "t.me/+", "joinchat", "telegram.me/"])
+    return any(x in text for x in ("t.me/", "t.me/+", "joinchat", "telegram.me/"))
 
 
 def _has_media(m: Message) -> bool:
-    return bool(m.photo or m.video or m.document or m.animation or m.sticker or m.audio or m.voice)
+    return bool(
+        m.photo
+        or m.video
+        or m.document
+        or m.animation
+        or m.sticker
+        or m.audio
+        or m.voice
+    )
 
 
 def _has_url_buttons(m: Message) -> bool:
@@ -89,7 +93,7 @@ async def antibot_cmd(c, m: Message):
         return await m.reply_text(s[f"ANTIBOT_{mode.upper()}"])
 
     mode = m.command[1].lower()
-    if mode not in ["off", "links", "media", "buttons", "all"]:
+    if mode not in ("off", "links", "media", "buttons", "all"):
         return await m.reply_text(s["ANTIBOT_USAGE"])
 
     _set_mode(m.chat.id, mode)
@@ -100,15 +104,14 @@ async def antibot_cmd(c, m: Message):
 async def antibot_handler(c, m: Message):
     if m.entities and m.entities[0].type == MessageEntityType.BOT_COMMAND and m.entities[0].offset == 0:
         return
-    
+
     if not m.from_user or not m.from_user.is_bot:
         return
-    
+
     if m.from_user.id == arch.me.id:
         return
 
     mode = _get_mode(m.chat.id)
-    
     if mode == "off":
         return
 
@@ -123,8 +126,22 @@ async def antibot_handler(c, m: Message):
     elif mode == "buttons":
         should_delete = _has_url_buttons(m)
 
-    if should_delete:
-        try:
-            await m.delete()
-        except Exception:
-            pass
+    if not should_delete:
+        return
+
+    try:
+        me = await c.get_chat_member(m.chat.id, arch.me.id)
+        target = await c.get_chat_member(m.chat.id, m.from_user.id)
+    except Exception:
+        return
+
+    if not me.privileges or not me.privileges.can_delete_messages:
+        return
+
+    if target.status in (ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER):
+        return
+
+    try:
+        await m.delete()
+    except Exception:
+        return
