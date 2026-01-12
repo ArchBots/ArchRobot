@@ -102,10 +102,11 @@ async def promote(c, m):
         return await m.reply_text(s["ABOTP"])
 
     provider = await c.get_chat_member(m.chat.id, m.from_user.id)
-    if not provider.privileges or not provider.privileges.can_promote_members:
-        if err(m.chat.id):
-            await m.reply_text(s["AUSERP"])
-        return
+    if provider.status != ChatMemberStatus.OWNER:
+        if not provider.privileges or not provider.privileges.can_promote_members:
+            if err(m.chat.id):
+                await m.reply_text(s["AUSERP"])
+            return
 
     u = await _target(c, m)
     if not u:
@@ -123,10 +124,16 @@ async def promote(c, m):
     title = " ".join(m.command[2:]) if len(m.command) > 2 else None
 
     try:
+        # If provider is owner, they have all rights, so just use bot's privileges
+        if provider.status == ChatMemberStatus.OWNER:
+            rights = bot.privileges
+        else:
+            rights = _mix(bot.privileges, provider.privileges)
+        
         await c.promote_chat_member(
             m.chat.id,
             u.id,
-            privileges=_mix(bot.privileges, provider.privileges),
+            privileges=rights,
         )
         if title:
             await c.set_administrator_title(m.chat.id, u.id, title)
@@ -146,10 +153,11 @@ async def demote(c, m):
         return await m.reply_text(s["ABOTP"])
 
     provider = await c.get_chat_member(m.chat.id, m.from_user.id)
-    if not provider.privileges or not provider.privileges.can_promote_members:
-        if err(m.chat.id):
-            await m.reply_text(s["AUSERP"])
-        return
+    if provider.status != ChatMemberStatus.OWNER:
+        if not provider.privileges or not provider.privileges.can_promote_members:
+            if err(m.chat.id):
+                await m.reply_text(s["AUSERP"])
+            return
 
     u = await _target(c, m)
     if not u:

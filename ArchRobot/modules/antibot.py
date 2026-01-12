@@ -96,8 +96,11 @@ async def antibot_cmd(c, m: Message):
     await m.reply_text(s[f"ANTIBOT_{mode.upper()}"])
 
 
-@arch.on_message(filters.group & ~filters.command("antibot"))
+@arch.on_message(filters.group)
 async def antibot_handler(c, m: Message):
+    if m.entities and m.entities[0].type == MessageEntityType.BOT_COMMAND and m.entities[0].offset == 0:
+        return
+    
     if not m.from_user or not m.from_user.is_bot:
         return
     
