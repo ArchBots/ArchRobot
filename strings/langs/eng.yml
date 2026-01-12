@@ -30,7 +30,7 @@ AANON_OFF: "Anonymous admin mode disabled."
 AERR_ON: "Admin error messages enabled."
 AERR_OFF: "Admin error messages disabled."
 ALIST_EMPTY: "No administrators found."
-
+ANOTYOURADMIN: "You can only demote admins you promoted."
 # Federation
 FHELP: "*Federation*\n\nFederations allow you to share ban lists across multiple groups. When a user is banned in one federation, they are automatically banned in all groups linked to that federation.\n\n*Federation commands:*\n- /newfed <name>: Create a new federation (private chat only).\n- /renamefed <name>: Rename your federation.\n- /deletefed: Delete your federation.\n- /fedinfo [fed_id]: Get information about a federation.\n- /fedadmins [fed_id]: List federation admins.\n- /myfeds: List your federations.\n- /chatfed: Show which federation this chat is linked to.\n- /joinfed <fed_id>: Join a federation (chat owner only).\n- /leavefed: Leave the current federation (chat owner only).\n- /fban <user> [reason]: Ban a user from the federation.\n- /funban <user>: Unban a user from the federation.\n- /fbanlist: List all banned users in the federation.\n- /fstat <user>: Check if a user is banned in any federations.\n\nOnly the chat owner can link or unlink a chat from a federation. Federation bans are enforced automatically when users join."
 FCREATED: "Federation created successfully.\nFederation ID: {0}\nFederation Name: {1}\n\nUse this ID to let other groups join your federation."

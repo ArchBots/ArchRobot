@@ -177,9 +177,13 @@ async def demote(c, m):
         return await m.reply_text(s["ADFAIL"])
 
     promoter = await _get_promoter(m.chat.id, u.id)
-    owner = target.promoted_by and target.promoted_by.id == m.from_user.id
 
-    if not owner and promoter != m.from_user.id:
+    if not promoter:
+        if err(m.chat.id):
+            await m.reply_text(s["ANOTPROMOTED"])
+        return
+
+    if promoter != m.from_user.id:
         if err(m.chat.id):
             await m.reply_text(s["ANOTYOURADMIN"])
         return
