@@ -76,7 +76,7 @@ async def _target(c, m):
 
 
 def _mix(bot, user):
-    return ChatAdministratorRights(
+    rights = ChatAdministratorRights(
         can_manage_chat=bot.can_manage_chat and user.can_manage_chat,
         can_change_info=bot.can_change_info and user.can_change_info,
         can_delete_messages=bot.can_delete_messages and user.can_delete_messages,
@@ -91,6 +91,11 @@ def _mix(bot, user):
         can_edit_stories=bot.can_edit_stories and user.can_edit_stories,
         can_delete_stories=bot.can_delete_stories and user.can_delete_stories,
     )
+
+    if not any(vars(rights).values()):
+        rights.can_delete_messages = True
+
+    return rights
 
 
 def _demote():
