@@ -54,10 +54,11 @@ with eng_file.open(encoding="utf8") as f:
 
 languages["en"] = languages["eng"]
 
-languages_present["eng"] = languages["eng"].get("name", "English")
-languages_present["en"] = languages_present["eng"]
+# Only add "en" to languages_present, not "eng" to avoid duplicate buttons
+languages_present["en"] = languages["eng"].get("name", "English")
 
 
+# Load all other language files (rus.yml, esp.yml, etc.)
 for file in LANGS_DIR.iterdir():
     if file.suffix != ".yml" or file.name == "eng.yml":
         continue
@@ -70,11 +71,15 @@ for file in LANGS_DIR.iterdir():
     for key, value in languages["eng"].items():
         languages[lang].setdefault(key, value)
 
-    try:
-        languages_present[lang] = languages[lang]["name"]
-    except KeyError:
-        print(
-            "Language file error detected. "
-            "Please report it to @ArchAssociation on Telegram"
-        )
-        sys.exit(1)
+# Add language aliases for standard ISO codes
+# This allows both short codes (en/es/ru) and long codes (eng/esp/rus) to work
+# Only short codes appear in the UI language selector to avoid duplicates
+# Spanish alias
+if "esp" in languages:
+    languages["es"] = languages["esp"]
+    languages_present["es"] = languages["esp"]["name"]
+
+# Russian alias
+if "rus" in languages:
+    languages["ru"] = languages["rus"]
+    languages_present["ru"] = languages["rus"]["name"]

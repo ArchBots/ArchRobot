@@ -32,6 +32,8 @@ AERR_OFF: "Admin error messages disabled."
 ALIST_EMPTY: "No administrators found."
 ANOTYOURADMIN: "You can only demote admins you promoted."
 ANOTPROMOTED: "This user was not promoted by you."
+AOWNER: "I can't promote/demote the chat owner."
+GROUP_ONLY: "This command can only be used in groups."
 # Antibot
 ANTIBOTHELP: "*Antibot*\n\nProtect your chat from spam bots.\n\n*Commands:*\n- /antibot off: Disable antibot\n- /antibot links: Delete bot messages with invite links\n- /antibot media: Delete bot messages with media\n- /antibot buttons: Delete bot messages with URL buttons\n- /antibot all: Delete all bot messages\n\nDefault: links\n\nRequires admin with delete permission."
 ANTIBOT_OFF: "Antibot mode: off"

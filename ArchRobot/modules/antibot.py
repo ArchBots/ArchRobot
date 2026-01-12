@@ -12,7 +12,7 @@
 #
 
 from pyrogram import filters
-from pyrogram.enums import MessageEntityType, ChatMemberStatus
+from pyrogram.enums import MessageEntityType, ChatMemberStatus, ChatType
 from pyrogram.types import Message
 
 from ArchRobot import arch
@@ -79,13 +79,20 @@ def _has_url_buttons(m: Message) -> bool:
     return False
 
 
-@arch.on_message(filters.command("antibot") & filters.group)
+@arch.on_message(filters.command("antibot"))
 async def antibot_cmd(c, m: Message):
+    # Check if in private chat first
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
 
     member = await c.get_chat_member(m.chat.id, m.from_user.id)
-    if not member.privileges or not member.privileges.can_delete_messages:
+    if member.status == ChatMemberStatus.OWNER:
+        pass  # Owner can always use this command
+    elif not member.privileges or not member.privileges.can_delete_messages:
         return await m.reply_text(s["ANTIBOT_NOPERM"])
 
     if len(m.command) < 2:
@@ -102,8 +109,14 @@ async def antibot_cmd(c, m: Message):
 
 @arch.on_message(filters.group)
 async def antibot_handler(c, m: Message):
-    if m.entities and m.entities[0].type == MessageEntityType.BOT_COMMAND and m.entities[0].offset == 0:
+    # Skip commands - check if text starts with / or if there's a bot command entity at offset 0
+    if m.text and m.text.startswith("/"):
         return
+    
+    if m.entities:
+        for e in m.entities:
+            if e.type == MessageEntityType.BOT_COMMAND and e.offset == 0:
+                return  # Return immediately when command found at offset 0
 
     if not m.from_user or not m.from_user.is_bot:
         return
@@ -131,17 +144,13 @@ async def antibot_handler(c, m: Message):
 
     try:
         me = await c.get_chat_member(m.chat.id, arch.me.id)
-        target = await c.get_chat_member(m.chat.id, m.from_user.id)
     except Exception:
         return
 
     if not me.privileges or not me.privileges.can_delete_messages:
         return
 
-    if target.status in (ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER):
-        return
-
     try:
         await m.delete()
     except Exception:
-        return
+        pass

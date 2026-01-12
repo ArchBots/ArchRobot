@@ -19,7 +19,7 @@
 #
 
 from pyrogram import filters
-from pyrogram.enums import ChatMemberStatus, MessageEntityType
+from pyrogram.enums import ChatMemberStatus, MessageEntityType, ChatType
 from pyrogram.types import ChatAdministratorRights
 
 from ArchRobot import arch
@@ -92,8 +92,13 @@ def _demote():
     )
 
 
-@arch.on_message(filters.command("promote") & filters.group)
+@arch.on_message(filters.command("promote"))
 async def promote(c, m):
+    # Check if in private chat first
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
 
@@ -143,8 +148,12 @@ async def promote(c, m):
         await m.reply_text(s["APFAIL"])
 
 
-@arch.on_message(filters.command("demote") & filters.group)
+@arch.on_message(filters.command("demote"))
 async def demote(c, m):
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
 
@@ -164,6 +173,10 @@ async def demote(c, m):
         return await m.reply_text(s["ATARGET"])
 
     target = await c.get_chat_member(m.chat.id, u.id)
+    
+    if target.status == ChatMemberStatus.OWNER:
+        return await m.reply_text(s["AOWNER"])
+    
     if target.status != ChatMemberStatus.ADMINISTRATOR:
         return await m.reply_text(s["ADFAIL"])
 

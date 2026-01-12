@@ -1,6 +1,6 @@
 from pyrogram import filters
 from pyrogram.types import Message
-from pyrogram.enums import MessageEntityType
+from pyrogram.enums import MessageEntityType, ChatType
 
 from ArchRobot import arch
 from strings import get_string
@@ -49,8 +49,13 @@ def _get_media(msg):
     return "text", None, None, msg.text if msg.text else ""
 
 
-@arch.on_message(filters.command("filter") & filters.group)
+@arch.on_message(filters.command("filter"))
 async def filter_cmd(c, m: Message):
+    # Check if in private chat first
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
     
@@ -96,8 +101,13 @@ async def filter_cmd(c, m: Message):
         await m.reply_text(s.get("FFAIL", "Failed to add filter."))
 
 
-@arch.on_message(filters.command("stop") & filters.group)
+@arch.on_message(filters.command("stop"))
 async def stop_cmd(c, m: Message):
+    # Check if in private chat first
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
     
@@ -125,8 +135,13 @@ async def stop_cmd(c, m: Message):
         await m.reply_text(s.get("FNOT", "Filter not found."))
 
 
-@arch.on_message(filters.command("stopall") & filters.group)
+@arch.on_message(filters.command("stopall"))
 async def stopall_cmd(c, m: Message):
+    # Check if in private chat first
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
     
@@ -144,8 +159,13 @@ async def stopall_cmd(c, m: Message):
         await m.reply_text(s.get("FNONE", "No filters."))
 
 
-@arch.on_message(filters.command("filters") & filters.group)
+@arch.on_message(filters.command("filters"))
 async def filters_cmd(c, m: Message):
+    # Check if in private chat first
+    if m.chat.type == ChatType.PRIVATE:
+        s = _s(m.from_user.id)
+        return await m.reply_text(s["GROUP_ONLY"])
+    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
     
