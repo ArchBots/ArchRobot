@@ -49,9 +49,8 @@ def _get_media(msg):
     return "text", None, None, msg.text if msg.text else ""
 
 
-@arch.on_message(filters.command("filter"))
+@arch.on_message(filters.command("filter", prefixes=["/", "!", "."]), group=1)
 async def filter_cmd(c, m: Message):
-    # Check if in private chat first
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
@@ -101,9 +100,8 @@ async def filter_cmd(c, m: Message):
         await m.reply_text(s.get("FFAIL", "Failed to add filter."))
 
 
-@arch.on_message(filters.command("stop"))
+@arch.on_message(filters.command("stop", prefixes=["/", "!", "."]), group=1)
 async def stop_cmd(c, m: Message):
-    # Check if in private chat first
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
@@ -135,9 +133,8 @@ async def stop_cmd(c, m: Message):
         await m.reply_text(s.get("FNOT", "Filter not found."))
 
 
-@arch.on_message(filters.command("stopall"))
+@arch.on_message(filters.command("stopall", prefixes=["/", "!", "."]), group=1)
 async def stopall_cmd(c, m: Message):
-    # Check if in private chat first
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
@@ -159,9 +156,8 @@ async def stopall_cmd(c, m: Message):
         await m.reply_text(s.get("FNONE", "No filters."))
 
 
-@arch.on_message(filters.command("filters"))
+@arch.on_message(filters.command("filters", prefixes=["/", "!", "."]), group=1)
 async def filters_cmd(c, m: Message):
-    # Check if in private chat first
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
@@ -189,7 +185,7 @@ def _should_reply_to_original(reply_content: str, replied_msg) -> bool:
     return has_filling(reply_content, "{replytag}") and replied_msg is not None
 
 
-@arch.on_message(filters.group & filters.text & ~filters.command(["filter", "stop", "stopall", "filters"]))
+@arch.on_message(filters.group & filters.text & ~filters.command(["filter", "stop", "stopall", "filters"]), group=2)
 async def filter_handler(c, m: Message):
     if _is_cmd(m) or not m.text:
         return

@@ -1,23 +1,4 @@
-#
-# This file is part of the ArchRobot project.
-# Repository: https://github.com/ArchBots/ArchRobot
-#
-# Licensed under the MIT License.
-# You may obtain a copy of the License in the LICENSE file
-# distributed with this source code.
-#
-# This software is provided "as is", without warranty of any kind,
-#
-
-#
-# Copyright (c) 2024–2026 ArchBots
-#
-# This file is part of the ArchRobot project.
-# Repository: https://github.com/ArchBots/ArchRobot
-#
-# Licensed under the MIT License.
-#
-
+import time
 from pyrogram import filters
 from pyrogram.enums import ChatMemberStatus, MessageEntityType, ChatType
 from pyrogram.types import ChatAdministratorRights
@@ -25,15 +6,52 @@ from pyrogram.types import ChatAdministratorRights
 from ArchRobot import arch
 from strings import get_string
 from ArchRobot.db.users import lang, update_user
-from ArchRobot.db.settings import err, set_anon, set_err
+from ArchRobot.db.admin import set_promoter, get_promoter, clear_promoter
 
 
 __mod_name__ = "Admin"
 __help__ = "AHELP"
 
 
+_cache = {}
+_CACHE_TTL = 300
+
+
+def _cache_key(chat_id, user_id):
+    return (chat_id, user_id)
+
+
+def _get_cached(chat_id, user_id):
+    key = _cache_key(chat_id, user_id)
+    if key in _cache:
+        val, ts = _cache[key]
+        if time.time() - ts < _CACHE_TTL:
+            return val
+        del _cache[key]
+    return None
+
+
+def _set_cached(chat_id, user_id, val):
+    _cache[_cache_key(chat_id, user_id)] = (val, time.time())
+
+
+def _invalidate_cache(chat_id, user_id):
+    key = _cache_key(chat_id, user_id)
+    if key in _cache:
+        del _cache[key]
+
+
 def _s(uid):
     return get_string(lang(uid) or "en")
+
+
+async def _get_member(c, chat_id, user_id):
+    cached = _get_cached(chat_id, user_id)
+    if cached is not None:
+        return cached
+    member = await c.get_chat_member(chat_id, user_id)
+    _set_cached(chat_id, user_id, member)
+    return member
 
 
 async def _target(c, m):
@@ -67,10 +85,8 @@ def _mix(bot, user):
         can_edit_stories=bot.can_edit_stories and user.can_edit_stories,
         can_delete_stories=bot.can_delete_stories and user.can_delete_stories,
     )
-
     if not any(vars(rights).values()):
         rights.can_delete_messages = True
-
     return rights
 
 
@@ -92,100 +108,88 @@ def _demote():
     )
 
 
-@arch.on_message(filters.command("promote"))
+@arch.on_message(filters.command(["promote"], prefixes=["/", "!", "."]), group=1)
 async def promote(c, m):
-    # Check if in private chat first
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
-    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
-
-    bot = await c.get_chat_member(m.chat.id, arch.me.id)
+    bot = await _get_member(c, m.chat.id, arch.me.id)
     if not bot.privileges or not bot.privileges.can_promote_members:
         return await m.reply_text(s["ABOTP"])
-
-    provider = await c.get_chat_member(m.chat.id, m.from_user.id)
+    provider = await _get_member(c, m.chat.id, m.from_user.id)
     if provider.status != ChatMemberStatus.OWNER:
         if not provider.privileges or not provider.privileges.can_promote_members:
-            if err(m.chat.id):
-                await m.reply_text(s["AUSERP"])
-            return
-
+            return await m.reply_text(s["AUSERP"])
     u = await _target(c, m)
     if not u:
         return await m.reply_text(s["ATARGET"])
-
     await update_user(u.id, u.username)
-    target = await c.get_chat_member(m.chat.id, u.id)
-
+    target = await _get_member(c, m.chat.id, u.id)
     if target.status == ChatMemberStatus.OWNER:
         return await m.reply_text(s["AOWNER"])
-    
     if target.status == ChatMemberStatus.ADMINISTRATOR:
         return await m.reply_text(s["AALREADY"])
-
-    title = " ".join(m.command[2:]) if len(m.command) > 2 else None
-
+    explicit_title = " ".join(m.command[2:]) if len(m.command) > 2 else None
     try:
-        # If provider is owner, they have all rights, so just use bot's privileges
         if provider.status == ChatMemberStatus.OWNER:
             rights = bot.privileges
         else:
             rights = _mix(bot.privileges, provider.privileges)
-        
         await c.promote_chat_member(
             m.chat.id,
             u.id,
             privileges=rights,
         )
-        if title:
-            await c.set_administrator_title(m.chat.id, u.id, title)
-
-        await m.reply_text(s["APOK"])
+        title = explicit_title or (u.username.lstrip("@") if u.username else None) or u.first_name or "Admin"
+        try:
+            await c.set_administrator_title(m.chat.id, u.id, title[:16])
+        except Exception:
+            pass
+        await set_promoter(m.chat.id, u.id, m.from_user.id)
+        _invalidate_cache(m.chat.id, u.id)
+        return await m.reply_text(s["APOK"])
     except Exception:
-        await m.reply_text(s["APFAIL"])
+        return await m.reply_text(s["APFAIL"])
 
 
-@arch.on_message(filters.command("demote"))
+@arch.on_message(filters.command(["demote"], prefixes=["/", "!", "."]), group=1)
 async def demote(c, m):
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
-    
     s = _s(m.from_user.id)
     await update_user(m.from_user.id, m.from_user.username)
-
-    bot = await c.get_chat_member(m.chat.id, arch.me.id)
+    bot = await _get_member(c, m.chat.id, arch.me.id)
     if not bot.privileges or not bot.privileges.can_promote_members:
         return await m.reply_text(s["ABOTP"])
-
-    provider = await c.get_chat_member(m.chat.id, m.from_user.id)
+    provider = await _get_member(c, m.chat.id, m.from_user.id)
     if provider.status != ChatMemberStatus.OWNER:
         if not provider.privileges or not provider.privileges.can_promote_members:
-            if err(m.chat.id):
-                await m.reply_text(s["AUSERP"])
-            return
-
+            return await m.reply_text(s["AUSERP"])
     u = await _target(c, m)
     if not u:
         return await m.reply_text(s["ATARGET"])
-
-    target = await c.get_chat_member(m.chat.id, u.id)
-    
+    target = await _get_member(c, m.chat.id, u.id)
     if target.status == ChatMemberStatus.OWNER:
         return await m.reply_text(s["AOWNER"])
-    
     if target.status != ChatMemberStatus.ADMINISTRATOR:
         return await m.reply_text(s["ADFAIL"])
-
+    promoter_id = await get_promoter(m.chat.id, u.id)
+    if provider.status != ChatMemberStatus.OWNER:
+        if promoter_id is None:
+            return await m.reply_text(s["ANOTVIAME"])
+        if promoter_id != m.from_user.id:
+            return await m.reply_text(s["ANOTPROMOTED"])
     try:
         await c.promote_chat_member(
             m.chat.id,
             u.id,
             privileges=_demote(),
         )
-        await m.reply_text(s["ADOK"])
+        await clear_promoter(m.chat.id, u.id)
+        _invalidate_cache(m.chat.id, u.id)
+        return await m.reply_text(s["ADOK"])
     except Exception:
-        await m.reply_text(s["ADFAIL"])
+        return await m.reply_text(s["ADFAIL"])

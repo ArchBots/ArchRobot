@@ -45,7 +45,6 @@ class ArchUb:
                 config.API_ID,
                 config.API_HASH,
                 session_string=s,
-                no_updates=True
             )
             await c.start()
             self.clients.append(c)

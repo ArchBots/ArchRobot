@@ -1,6 +1,6 @@
 import uuid
 from pyrogram import filters
-from pyrogram.enums import ChatMemberStatus, ChatType
+from pyrogram.enums import ChatMemberStatus, ChatType, MessageEntityType
 
 from ArchRobot import arch
 from strings import get_string
@@ -29,6 +29,10 @@ async def _is_owner(c, cid, uid):
 async def _target(c, m):
     if m.reply_to_message:
         return m.reply_to_message.from_user
+    if m.entities:
+        for e in m.entities:
+            if e.type == MessageEntityType.TEXT_MENTION and e.user:
+                return e.user
     if len(m.command) < 2:
         return None
     try:
@@ -37,7 +41,7 @@ async def _target(c, m):
         return None
 
 
-@arch.on_message(filters.command("newfed") & filters.private)
+@arch.on_message(filters.command("newfed", prefixes=["/", "!", "."]) & filters.private, group=1)
 async def newfed(_, m):
     s = _s(m.from_user.id)
 
@@ -55,7 +59,7 @@ async def newfed(_, m):
         await m.reply_text(s["FEXISTS"])
 
 
-@arch.on_message(filters.command("renamefed"))
+@arch.on_message(filters.command("renamefed", prefixes=["/", "!", "."]), group=1)
 async def renamefed(_, m):
     s = _s(m.from_user.id)
 
@@ -79,7 +83,7 @@ async def renamefed(_, m):
         await m.reply_text(s["FNOTFOUND"])
 
 
-@arch.on_message(filters.command("deletefed"))
+@arch.on_message(filters.command("deletefed", prefixes=["/", "!", "."]), group=1)
 async def deletefed(_, m):
     s = _s(m.from_user.id)
 
@@ -98,7 +102,7 @@ async def deletefed(_, m):
         await m.reply_text(s["FNOTFOUND"])
 
 
-@arch.on_message(filters.command("fedinfo"))
+@arch.on_message(filters.command("fedinfo", prefixes=["/", "!", "."]), group=1)
 async def fedinfo(_, m):
     s = _s(m.from_user.id)
 
@@ -129,7 +133,7 @@ async def fedinfo(_, m):
     )
 
 
-@arch.on_message(filters.command("fedadmins"))
+@arch.on_message(filters.command("fedadmins", prefixes=["/", "!", "."]), group=1)
 async def fedadmins(_, m):
     s = _s(m.from_user.id)
 
@@ -150,7 +154,7 @@ async def fedadmins(_, m):
     await m.reply_text(s["FADMINS"].format("\n".join(admins)))
 
 
-@arch.on_message(filters.command("myfeds"))
+@arch.on_message(filters.command("myfeds", prefixes=["/", "!", "."]), group=1)
 async def myfeds(_, m):
     s = _s(m.from_user.id)
 
@@ -167,7 +171,7 @@ async def myfeds(_, m):
     await m.reply_text(s["FMYFEDS"].format("\n".join(fed_list)))
 
 
-@arch.on_message(filters.command("chatfed") & filters.group)
+@arch.on_message(filters.command("chatfed", prefixes=["/", "!", "."]) & filters.group, group=1)
 async def chatfed(_, m):
     s = _s(m.from_user.id)
 
@@ -183,7 +187,7 @@ async def chatfed(_, m):
     await m.reply_text(s["FCHATINFO"].format(fed_id, fed["name"]))
 
 
-@arch.on_message(filters.command("joinfed") & filters.group)
+@arch.on_message(filters.command("joinfed", prefixes=["/", "!", "."]) & filters.group, group=1)
 async def joinfed(c, m):
     s = _s(m.from_user.id)
 
@@ -214,7 +218,7 @@ async def joinfed(c, m):
         await m.reply_text(s["AERR"])
 
 
-@arch.on_message(filters.command("leavefed") & filters.group)
+@arch.on_message(filters.command("leavefed", prefixes=["/", "!", "."]) & filters.group, group=1)
 async def leavefed(c, m):
     s = _s(m.from_user.id)
 
@@ -234,7 +238,7 @@ async def leavefed(c, m):
         await m.reply_text(s["AERR"])
 
 
-@arch.on_message(filters.command("fban"))
+@arch.on_message(filters.command("fban", prefixes=["/", "!", "."]), group=1)
 async def fban(c, m):
     s = _s(m.from_user.id)
 
@@ -282,7 +286,7 @@ async def fban(c, m):
     await m.reply_text(s["FBANNED"].format(u.mention, fed["name"]))
 
 
-@arch.on_message(filters.command("funban"))
+@arch.on_message(filters.command("funban", prefixes=["/", "!", "."]), group=1)
 async def funban(c, m):
     s = _s(m.from_user.id)
 
@@ -329,7 +333,7 @@ async def funban(c, m):
     await m.reply_text(s["FUNBANNED"].format(u.mention, fed["name"]))
 
 
-@arch.on_message(filters.command("fbanlist") & filters.group)
+@arch.on_message(filters.command("fbanlist", prefixes=["/", "!", "."]) & filters.group, group=1)
 async def fbanlist(_, m):
     s = _s(m.from_user.id)
 
@@ -354,7 +358,7 @@ async def fbanlist(_, m):
     await m.reply_text(s["FBANLIST"].format("\n".join(ban_list)))
 
 
-@arch.on_message(filters.command("fstat"))
+@arch.on_message(filters.command("fstat", prefixes=["/", "!", "."]), group=1)
 async def fstat(c, m):
     s = _s(m.from_user.id)
 

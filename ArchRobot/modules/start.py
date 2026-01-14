@@ -51,7 +51,7 @@ def kb_lang():
     return InlineKeyboardMarkup(rows)
 
 
-@arch.on_message(filters.command("start") & filters.private)
+@arch.on_message(filters.command("start", prefixes=["/", "!", "."]) & filters.private, group=1)
 async def start(_, m):
     uid = m.from_user.id
     username = m.from_user.username
@@ -74,8 +74,9 @@ async def start(_, m):
     )
 
 
-@arch.on_callback_query(filters.regex("^agree$"))
+@arch.on_callback_query(filters.regex("^agree$"), group=1)
 async def agree_cb(_, q):
+    await q.answer()
     uid = q.from_user.id
     l = lang(uid) or "en"
     s = get_string(l)
@@ -88,13 +89,15 @@ async def agree_cb(_, q):
     )
 
 
-@arch.on_callback_query(filters.regex("^lang$"))
+@arch.on_callback_query(filters.regex("^lang$"), group=1)
 async def lang_open(_, q):
+    await q.answer()
     await q.message.edit_reply_markup(kb_lang())
 
 
-@arch.on_callback_query(filters.regex("^lang_"))
+@arch.on_callback_query(filters.regex("^lang_"), group=1)
 async def lang_set(_, q):
+    await q.answer()
     l = q.data.split("_", 1)[1]
     set_lang(q.from_user.id, l)
     s = get_string(l)
@@ -112,8 +115,9 @@ async def lang_set(_, q):
         )
 
 
-@arch.on_callback_query(filters.regex("^back$"))
+@arch.on_callback_query(filters.regex("^back$"), group=1)
 async def back(_, q):
+    await q.answer()
     uid = q.from_user.id
     l = lang(uid) or "en"
     s = get_string(l)
@@ -131,6 +135,7 @@ async def back(_, q):
         )
 
 
-@arch.on_callback_query(filters.regex("^close$"))
+@arch.on_callback_query(filters.regex("^close$"), group=1)
 async def close(_, q):
+    await q.answer()
     await q.message.delete()

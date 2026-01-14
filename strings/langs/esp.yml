@@ -96,3 +96,20 @@ FOWN: "Solo propietario."
 FREMA: "Se eliminaron {0} filtros."
 FNONE: "Sin filtros."
 FLIST: "Filtros:\n{0}"
+
+# Antiflood
+FLD_HELP: "*Antiflood*\n\nProtege tu chat del spam de inundación.\n\n*Comandos:*\n- /flood: Mostrar configuración\n- /setflood <num|off>: Establecer límite\n- /setfloodtimer <cnt> <dur>: Establecer flood temporizado\n- /setfloodtimer off: Desactivar flood temporizado\n- /floodmode <ban|mute|kick|tban|tmute> [tiempo]: Establecer acción\n- /clearflood <yes|no>: Eliminar mensajes\n\n*Uso único:*\n- /fban <cnt>: Ban único\n- /fmute <cnt>: Mute único\n- /fkick <cnt>: Kick único\n- /ftban <cnt> <tiempo>: Tban único\n- /ftmute <cnt> <tiempo>: Tmute único"
+FLD_ST: "Flood: {0} msgs, modo: {1}, timer: {2}/{3}s, limpiar: {4}"
+FLD_SET: "Límite de flood establecido en {0}."
+FLD_OFF: "Protección de flood desactivada."
+FLD_TSET: "Flood temporizado: {0} mensajes en {1} segundos."
+FLD_TOFF: "Flood temporizado desactivado."
+FLD_MODE: "Modo flood: {0}"
+FLD_CLR_ON: "Limpieza de flood activada."
+FLD_CLR_OFF: "Limpieza de flood desactivada."
+FLD_HIT: "Usuario inundó. Acción: {0}"
+FLD_1SET: "{0} de uso único establecido para {1} mensajes."
+FLD_1USE: "Flood de uso único activado. Acción: {0}"
+
+# Antibot notice
+AB_WARN: "Los mensajes de bots no están permitidos aquí."

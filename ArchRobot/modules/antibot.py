@@ -11,19 +11,28 @@
 # This software is provided "as is", without warranty of any kind,
 #
 
+import asyncio
 from pyrogram import filters
 from pyrogram.enums import MessageEntityType, ChatMemberStatus, ChatType
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 
 from ArchRobot import arch
+from ArchRobot.main.userac import Ub
+from ArchRobot.logger import LOGGER
 from strings import get_string
 from ArchRobot.db.users import lang, update_user
 from ArchRobot.db.settings import antibot_mode, set_antibot_mode
+from ArchRobot.modules.anti_bio import check_bio, _ensure_ub_in_chat
 
 __mod_name__ = "Antibot"
 __help__ = "ANTIBOTHELP"
 
+_L = LOGGER("AB")
 _cache = {}
+_ntc = {}
+_ntc_task = {}
+_hnd = False
 
 
 def _s(uid: int):
@@ -79,9 +88,8 @@ def _has_url_buttons(m: Message) -> bool:
     return False
 
 
-@arch.on_message(filters.command("antibot"))
+@arch.on_message(filters.command("antibot", prefixes=["/", "!", "."]), group=1)
 async def antibot_cmd(c, m: Message):
-    # Check if in private chat first
     if m.chat.type == ChatType.PRIVATE:
         s = _s(m.from_user.id)
         return await m.reply_text(s["GROUP_ONLY"])
@@ -91,7 +99,7 @@ async def antibot_cmd(c, m: Message):
 
     member = await c.get_chat_member(m.chat.id, m.from_user.id)
     if member.status == ChatMemberStatus.OWNER:
-        pass  # Owner can always use this command
+        pass
     elif not member.privileges or not member.privileges.can_delete_messages:
         return await m.reply_text(s["ANTIBOT_NOPERM"])
 
@@ -106,30 +114,35 @@ async def antibot_cmd(c, m: Message):
     _set_mode(m.chat.id, mode)
     await m.reply_text(s[f"ANTIBOT_{mode.upper()}"])
 
+    if mode != "off":
+        uc = Ub.one()
+        if uc:
+            joined = await _ensure_ub_in_chat(uc, m.chat.id)
+            if not joined:
+                _L.info(f"AB | assistant join fail | chat={m.chat.id}")
 
-@arch.on_message(filters.group)
-async def antibot_handler(c, m: Message):
-    # Skip commands - check if text starts with / or if there's a bot command entity at offset 0
-    if m.text and m.text.startswith("/"):
+
+async def _ab_watch(_, m: Message):
+    if m.text and m.text.startswith(("/", "!", ".")):
         return
-    
     if m.entities:
         for e in m.entities:
             if e.type == MessageEntityType.BOT_COMMAND and e.offset == 0:
-                return  # Return immediately when command found at offset 0
-
-    if not m.from_user or not m.from_user.is_bot:
-        return
-
-    if m.from_user.id == arch.me.id:
-        return
-
+                return
     mode = _get_mode(m.chat.id)
     if mode == "off":
         return
-
+    if not m.from_user:
+        return
+    if not m.from_user.is_bot:
+        if await check_bio(m):
+            return
+        return
+    if m.from_user.id == arch.id:
+        _L.info(f"AB | skip self | chat={m.chat.id}")
+        return
+    _L.info(f"AB | bot msg | chat={m.chat.id}")
     should_delete = False
-
     if mode == "all":
         should_delete = True
     elif mode == "links":
@@ -138,19 +151,53 @@ async def antibot_handler(c, m: Message):
         should_delete = _has_media(m)
     elif mode == "buttons":
         should_delete = _has_url_buttons(m)
-
     if not should_delete:
         return
-
+    cid = m.chat.id
+    mid = m.id
     try:
-        me = await c.get_chat_member(m.chat.id, arch.me.id)
+        await arch.delete_messages(cid, mid)
+        _L.info(f"AB | bot msg del | chat={cid}")
     except Exception:
-        return
+        pass
+    await _send_ntc(cid)
 
-    if not me.privileges or not me.privileges.can_delete_messages:
-        return
 
+def reg_ab_hnd():
+    global _hnd
+    if _hnd:
+        return
+    uc = Ub.one()
+    if not uc:
+        return
+    uc.add_handler(MessageHandler(_ab_watch, filters.group), group=2)
+    _hnd = True
+
+
+async def _del_ntc(cid: int, mid: int):
+    await asyncio.sleep(3600)
+    if _ntc.get(cid) == mid:
+        try:
+            await arch.delete_messages(cid, mid)
+            _L.info(f"AB | ntc del | chat={cid}")
+        except Exception:
+            pass
+        _ntc.pop(cid, None)
+        _ntc_task.pop(cid, None)
+
+
+async def _send_ntc(cid: int):
+    if cid in _ntc:
+        if cid in _ntc_task:
+            _ntc_task[cid].cancel()
+        _ntc_task[cid] = asyncio.create_task(_del_ntc(cid, _ntc[cid]))
+        _L.info(f"AB | ntc reuse | chat={cid}")
+        return
+    s = get_string("en")
     try:
-        await m.delete()
+        msg = await arch.send_message(cid, s["AB_WARN"], disable_notification=True)
+        _ntc[cid] = msg.id
+        _ntc_task[cid] = asyncio.create_task(_del_ntc(cid, msg.id))
+        _L.info(f"AB | ntc sent | chat={cid}")
     except Exception:
         pass

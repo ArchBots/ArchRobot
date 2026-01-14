@@ -19,6 +19,7 @@ from pyrogram.types import BotCommand
 import config
 from ArchRobot.logger import LOGGER
 from ArchRobot.db import federations, filt
+from ArchRobot.main.userac import Ub
 
 
 class ArchRoBot(Client):
@@ -95,6 +96,15 @@ class ArchRoBot(Client):
             except Exception:
                 pass
 
+        await Ub.start()
+        if Ub.clients:
+            self.log.info("assistant started")
+            try:
+                await self.send_message(config.LOG_GROUP_ID, "assistant started")
+            except Exception:
+                pass
+        from ArchRobot.modules.antibot import reg_ab_hnd
+        reg_ab_hnd()
         self.log.info(f"ArchRoBot started as {self.name}")
 
     async def stop(self, *args, **kwargs):
